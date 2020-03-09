@@ -1,6 +1,7 @@
 package com.example.asepmentry.service;
 
 import com.example.asepmentry.modell.Currency;
+import com.example.asepmentry.repository.CurrencyRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -14,6 +15,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.json.JSONObject;
 
@@ -21,9 +23,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SkyScannerConnector {
+
+    @Autowired
+    private CurrencyRepository currencyRepository;
 
     public void getCurrencies() {
         CloseableHttpClient client = HttpClients.createDefault();
@@ -62,16 +68,23 @@ public class SkyScannerConnector {
             System.out.println(currencies.get(0).getSymbol());
             System.out.println(currencies.get(0).getCode());
 
-           /*
-           JSON Object from POJO
-            */
+
+            /*
+            Store object into DB
+             */
             Currency c1 = currencies.get(0);
+            currencyRepository.save(c1);
+            Optional<Currency> c1FromDB = currencyRepository.findByCode("ZAR");
+            System.out.println(c1FromDB.isPresent());
+            /*
+            JSON Object from POJO
+            */
             JSONObject c1Json = new JSONObject(c1);
             System.out.println(c1Json);
 
-             /*
+            /*
             Iterate through JSON without seralizing it
-             */
+            */
             JSONArray ja = new JSONArray(jsonNode.get("Currencies").toString());
             System.out.println(ja.length());
             System.out.println(ja.get(0));
@@ -86,7 +99,7 @@ public class SkyScannerConnector {
                     System.out.println(ja.optJSONObject(i).get("Code"));
                 }
             }
-            
+
             /*
             Post first currency as JSON
              */
